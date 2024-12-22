@@ -1,9 +1,43 @@
 pipeline {
-    agent any
+    agent none
+    options {
+        skipStagesAfterUnstable()
+    }
     stages {
         stage('Build') { 
+            agent {
+                docker {
+                    image 'maven:3.8.1-openjdk-11'
+                }
+            }
             steps {
                 sh 'mvn -B -DskipTests clean package' 
+            }
+        }
+        stage('Test') {
+            agent {
+                docker {
+                    image 'maven:3.8.1-openjdk-11'
+                    args '-v /var/run/docker.sock:/var/run/docker.sock'
+                }
+            }
+            steps {
+                sh 'mvn test'
+            }
+            post {
+                always {
+                    junit 'target/surefire-reports/*.xml'
+                }
+            }
+        }
+        stage('Deliver') { 
+            agent {
+                docker {
+                    image 'maven:3.8.1-openjdk-11'
+                }
+            }
+            steps {
+                sh './jenkins/scripts/deliver.sh' 
             }
         }
     }
