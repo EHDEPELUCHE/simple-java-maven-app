@@ -1,9 +1,17 @@
+// Inicio de nuestro pipeline
 pipeline {
+    // Indicamos que no queremos un agente general para todo el 
+    // pipeline. Además decimos que se salta las etapas una vez
+    // el pipeline quede inestable
     agent none
     options {
         skipStagesAfterUnstable()
     }
+    // Aquí definimos las distintas etapas
     stages {
+        // Para la primera etapa, de construcción, usaremos la
+        // imagen docker y lo que haremos es el comando definito
+        // en los 'pasos' o 'steps'
         stage('Build') { 
             agent {
                 docker {
@@ -14,6 +22,9 @@ pipeline {
                 sh 'mvn -B -DskipTests clean package' 
             }
         }
+        // Esta es la etapa de los tests, usamos la misma imagen
+        // pero esta vez tenemos una etapa posterior, que sirve
+        // para procesar los ficheros .xml con junit
         stage('Test') {
             agent {
                 docker {
@@ -29,6 +40,8 @@ pipeline {
                 }
             }
         }
+        // Esta es la etapa final, la de entrega, ejecuta el 
+        // deliver.sh que realiza la entrega
         stage('Deliver') { 
             agent {
                 docker {
